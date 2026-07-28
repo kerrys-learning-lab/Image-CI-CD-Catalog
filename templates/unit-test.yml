@@ -1,0 +1,86 @@
+spec:
+  inputs:
+
+    name:
+      description:  See templates/pipeline.yml
+      type: string
+      default: ''
+
+    dockerfile:
+      description:  See templates/pipeline.yml
+      type: string
+      default: Dockerfile
+
+    context:
+      description:  See templates/pipeline.yml
+      type: string
+      default: .
+
+    target:
+      description:  See templates/pipeline.yml
+      type: string
+      default: unittest
+
+    ignorefile:
+      description:  See templates/pipeline.yml
+      type: string
+      default: .dockerignore
+
+    build_args:
+      description:  See templates/pipeline.yml
+      type: array
+      default: []
+
+    build_secrets:
+      description:  See templates/pipeline.yml
+      type: array
+      default: []
+
+    container_test_results_path:
+      description: The location at which the image's unit test will write the
+                   the result xUnit file *within the running container*.
+                   This Job will mount an empty directory at this location in
+                   order to receive the file.
+      type: string
+      default: /var/tmp/test-results.xml
+
+    stage:
+      description: Assigns the Pipeline stage for this Job
+      type: string
+      default: test
+
+
+    # ------------------------------------------------------------------------
+    # These settings affect Job names for all Jobs instantiated by the component
+    job_name_prefix:
+      description: Optional prefix for this Job name
+      type: string
+      default: ''
+
+    job_name_suffix:
+      description: Optional suffix for this Job name
+      type: string
+      default: ''
+
+
+---
+
+
+# ============================================================================
+include:
+  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/defaults@release/0.1
+  - local: .base-jobs.gitlab-ci.yml
+
+
+# ============================================================================
+"$[[ inputs.job_name_prefix ]]image unit-test$[[ inputs.job_name_suffix ]]":
+  stage: $[[ inputs.stage ]]
+  extends: .image-unit-test
+  variables:
+    IMAGE_NAME: $[[ inputs.name ]]/unittest
+    IMAGE_CONTEXT: $[[ inputs.context ]]
+    IMAGE_DOCKERFILE: $[[ inputs.dockerfile ]]
+    IMAGE_TARGET: $[[ inputs.target ]]
+    IMAGE_IGNOREFILE: $[[ inputs.ignorefile ]]
+    COMPONENT_INPUT_IMAGE_BUILD_ARGS: "'$[[ inputs.build_args ]]'"
+    COMPONENT_INPUT_IMAGE_BUILD_SECRETS: "'$[[ inputs.build_secrets ]]'"

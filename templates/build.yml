@@ -1,0 +1,105 @@
+spec:
+
+  inputs:
+
+    name:
+      description: See templates/pipeline.yml
+      type: string
+      default: ''
+
+
+    dockerfile:
+      description: See templates/pipeline.yml
+      type: string
+      default: Dockerfile
+
+    context:
+      description: See templates/pipeline.yml
+      type: string
+      default: .
+
+    target:
+      description: See templates/pipeline.yml
+      type: string
+      default: ''
+
+    ignorefile:
+      description: See templates/pipeline.yml
+      type: string
+      default: .dockerignore
+
+    build_args:
+      description: See templates/pipeline.yml
+      type: array
+      default: []
+
+    build_secrets:
+      description: See templates/pipeline.yml
+      type: array
+      default: []
+
+    build_labels:
+      description: See templates/pipeline.yml
+      type: array
+      default: []
+
+    cache_mode:
+      description: See templates/pipeline.yml
+      type: string
+      options:
+        - default
+        - from
+        - to
+        - force
+        - none
+      default: default
+
+    stage:
+      description: Assigns the Pipeline stage for this Job
+      type: string
+      default: build
+
+    needs:
+      description: DAG specification for this Job
+      type: array
+      default: []
+
+
+    # ------------------------------------------------------------------------
+    job_name_prefix:
+      description: Optional prefix for this Job name
+      type: string
+      default: ''
+
+    job_name_suffix:
+      description: Optional suffix for this Job name
+      type: string
+      default: ''
+
+
+---
+
+
+# ============================================================================
+include:
+  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/defaults@release/0.1
+  - local: .base-jobs.gitlab-ci.yml
+
+
+# ============================================================================
+"$[[ inputs.job_name_prefix ]]image build$[[ inputs.job_name_suffix ]]":
+  stage: $[[ inputs.stage ]]
+  extends: .image-build
+  variables:
+    IMAGE_NAME: $[[ inputs.name ]]
+    IMAGE_CONTEXT: $[[ inputs.context ]]
+    IMAGE_DOCKERFILE: $[[ inputs.dockerfile ]]
+    IMAGE_TARGET: $[[ inputs.target ]]
+    IMAGE_IGNOREFILE: $[[ inputs.ignorefile ]]
+    IMAGE_BUILD_CACHE_MODE: $[[ inputs.cache_mode ]]
+    COMPONENT_INPUT_IMAGE_BUILD_ARGS: "'$[[ inputs.build_args ]]'"
+    COMPONENT_INPUT_IMAGE_BUILD_LABELS: "'$[[ inputs.build_labels ]]'"
+    COMPONENT_INPUT_IMAGE_BUILD_SECRETS: "'$[[ inputs.build_secrets ]]'"
+  needs:
+    - pipeline version
+    - $[[ inputs.needs ]]

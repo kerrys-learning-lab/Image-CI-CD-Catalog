@@ -1,0 +1,61 @@
+spec:
+  inputs:
+
+    name:
+      description:  See templates/pipeline.yml
+      type: string
+      default: ''
+
+    context:
+      description:  See templates/pipeline.yml
+      type: string
+      default: .
+
+    target:
+      description: The image build target, if applicable
+      type: string
+      default: unittest
+
+
+    structure_test_filename:
+      description: The test configuration file per https://github.com/googlecontainertools/container-structure-test
+      type: string
+      default: tests/image-structure-tests.yml
+
+    stage:
+      description: Assigns the Pipeline stage for this Job
+      type: string
+      default: test
+
+
+    # ------------------------------------------------------------------------
+    # These settings affect Job names for all Jobs instantiated by the component
+    job_name_prefix:
+      description: Optional prefix for this Job name
+      type: string
+      default: ''
+
+    job_name_suffix:
+      description: Optional suffix for this Job name
+      type: string
+      default: ''
+
+
+---
+
+
+# ============================================================================
+include:
+  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/defaults@release/0.1
+  - local: .base-jobs.gitlab-ci.yml
+
+
+# ============================================================================
+"$[[ inputs.job_name_prefix ]]image structure-test$[[ inputs.job_name_suffix ]]":
+  stage: $[[ inputs.stage ]]
+  extends: .image-structure-test
+  variables:
+    IMAGE_NAME: $[[ inputs.name ]]
+    IMAGE_CONTEXT: $[[ inputs.context ]]
+    IMAGE_TARGET: $[[ inputs.target ]]
+    CST_CONFIG_FILEPATH: "$[[ inputs.structure_test_filename ]]"
