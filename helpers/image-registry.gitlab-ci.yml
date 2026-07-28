@@ -1,0 +1,28 @@
+variables:
+  REGISTRY_AUTH_FILE: .registry.auth.json
+
+
+# ============================================================================
+.helpers/registry/login-ci-registry:
+  before_script:
+    - |
+      # --- helpers/registry/login-ci-registry -------------------------------
+      echo "🔓 Logging in to CI registry: ${CI_REGISTRY}"
+
+      printf '%s' "${CI_REGISTRY_PASSWORD}" | podman login  --password-stdin  \
+                                                            --username ${CI_REGISTRY_USER}  \
+                                                            ${CI_REGISTRY}
+
+
+# ============================================================================
+.helpers/registry/login-base-registry:
+  before_script:
+    - |
+      # --- helpers/registry/login-base-registry -----------------------------
+      if [[ -n "${BASE_REGISTRY}" && -n "${BASE_REGISTRY_USER}" && -n "${BASE_REGISTRY_PASSWORD}" ]]; then
+        echo "🔓 Logging in to base registry: ${BASE_REGISTRY}"
+
+        printf '%s' "${BASE_REGISTRY_PASSWORD}" | podman login  --password-stdin  \
+                                                                --username ${BASE_REGISTRY_USER}  \
+                                                                ${BASE_REGISTRY}
+      fi

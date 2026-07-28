@@ -1,0 +1,40 @@
+# ============================================================================
+include:
+  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/defaults@release/0.1
+  - local: .base-jobs.gitlab-ci.yml
+
+
+# ============================================================================
+workflow:
+  name: Image Pipeline Catalog Builder
+  rules:
+    - !reference [.rules//merge-request-as-primary-workflow, rules]
+
+
+# ============================================================================
+image build:
+  extends: .image-build
+  image: quay.io/podman/stable:v5.8.2
+
+
+# ============================================================================
+# Begin dog-fooding the image being built by this Pipeline
+# ============================================================================
+
+
+# ============================================================================
+image unit-test:
+  extends: .image-unit-test
+  image: $CI_REGISTRY_IMAGE:build.$CI_PIPELINE_IID
+
+
+# ============================================================================
+image structure-test:
+  extends: .image-structure-test
+  image: $CI_REGISTRY_IMAGE:build.$CI_PIPELINE_IID
+
+
+# ============================================================================
+image promote:
+  extends: .image-promote
+  image: $CI_REGISTRY_IMAGE:build.$CI_PIPELINE_IID

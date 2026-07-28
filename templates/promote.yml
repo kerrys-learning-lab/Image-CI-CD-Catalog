@@ -1,0 +1,73 @@
+spec:
+
+  inputs:
+
+    name:
+      description:  See templates/pipeline.yml
+      type: string
+      default: ''
+
+    target:
+      description:  See templates/pipeline.yml
+      type: string
+      default: ''
+
+    promote_release_train:
+      description:  See templates/pipeline.yml
+      type: boolean
+      default: true
+
+    promote_semantic_version:
+      description:  See templates/pipeline.yml
+      type: boolean
+      default: true
+
+    stage:
+      description:  See templates/pipeline.yml
+      type: string
+      default: publish
+
+    promote_mode:
+      description:  See templates/pipeline.yml
+      type: string
+      options:
+        - protected
+        - skip
+        - force
+      default: protected
+
+
+    job_name_prefix:
+      description: Optional prefix for this Job name
+      type: string
+      default: ''
+
+    job_name_suffix:
+      description: Optional suffix for this Job name
+      type: string
+      default: ''
+
+
+---
+
+
+# ============================================================================
+include:
+  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/defaults@release/0.1
+  - local: .base-jobs.gitlab-ci.yml
+
+
+# ============================================================================
+"$[[ inputs.job_name_prefix ]]image promote$[[ inputs.job_name_suffix ]]":
+  stage: $[[ inputs.stage ]]
+  extends: .image-promote
+  variables:
+    IMAGE_NAME: $[[ inputs.name ]]
+    IMAGE_TARGET: $[[ inputs.target ]]
+    IMAGE_PROMOTE_RELEASE_TRAIN: $[[ inputs.promote_release_train ]]
+    IMAGE_PROMOTE_SEMANTIC_VERSION_SLUG: $[[ inputs.promote_semantic_version ]]
+  rules:
+    - if: '"$[[ inputs.promote_mode ]]" == "skip"'
+      when: never
+    - if: '"$[[ inputs.promote_mode ]]" == "force"'
+    - !reference [.rules//if-protected-ref,  rules]
