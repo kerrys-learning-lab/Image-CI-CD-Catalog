@@ -1,0 +1,4 @@
+CI_PROJECT_DESCRIPTION: GitLab CI/CD Catalog for building, testing, and publishing OCI images.
+CI_PROJECT_ID: 105
+CI_PROJECT_TITLE: Image
+CI_REPOSITORY_URL: https://gitlab.westsidestreet.net/kerrys-learning-lab/devsecops/cicd-catalog/image

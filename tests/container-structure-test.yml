@@ -1,0 +1,14 @@
+schemaVersion: "2.0.0"
+
+metadataTest:
+  labels:
+    - key: org.opencontainers.image.title
+      value: Image
+
+commandTests:
+  - name: podman version
+    command: podman
+    args:
+      - --version
+    expectedOutput:
+      - ^podman version 5\..*

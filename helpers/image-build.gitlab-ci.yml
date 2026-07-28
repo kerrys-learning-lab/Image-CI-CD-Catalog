@@ -1,0 +1,187 @@
+# ============================================================================
+.helpers/image-build/labels:
+  before_script:
+    - |
+      # --- helpers/image-build/labels ---------------------------------------
+
+      # ----------------------------------------------------------------------
+      # Default image labels:
+      IMAGE_LABEL_ORG_OPENCONTAINERS_IMAGE_CREATED="${CI_PIPELINE_CREATED_AT:-$(date --iso-8601=seconds)}"
+      IMAGE_LABEL_ORG_OPENCONTAINERS_IMAGE_TITLE="${CI_PROJECT_TITLE}"
+      IMAGE_LABEL_ORG_OPENCONTAINERS_IMAGE_DESCRIPTION="${CI_PROJECT_DESCRIPTION}"
+      IMAGE_LABEL_ORG_OPENCONTAINERS_IMAGE_URL="${PROJECT_URL:-${CI_PROJECT_URL}}"
+      IMAGE_LABEL_ORG_OPENCONTAINERS_IMAGE_SOURCE="${CI_PROJECT_URL}"
+      IMAGE_LABEL_ORG_OPENCONTAINERS_IMAGE_VERSION="${CI_COMMIT_REF_SLUG}"
+      IMAGE_LABEL_ORG_OPENCONTAINERS_IMAGE_REVISION="${CI_COMMIT_SHA}"
+      IMAGE_LABEL_ORG_OPENCONTAINERS_IMAGE_AUTHORS="${GITLAB_USER_NAME}"
+      IMAGE_LABEL_ORG_OPENCONTAINERS_IMAGE_LICENSES="${PROJECT_LICENSES:-Apache-2.0}"
+      IMAGE_LABEL_ORG_OPENCONTAINERS_IMAGE_VENDOR="${PROJECT_VENDOR:-kerrys-learning-lab}"
+
+      IMAGE_LABELS=()
+
+
+      # ----------------------------------------------------------------------
+      # From the environment
+      for var in $(compgen -v IMAGE_LABEL_); do
+        name=${var#IMAGE_LABEL_}
+        name=${name,,}
+        name=${name//_/.}
+
+        value=${!var}
+
+        if [[ -n "${value}" ]]; then
+          IMAGE_LABELS+=("${name}=${value}")
+        fi
+      done
+
+      # ----------------------------------------------------------------------
+      # From the component, which arrive as a JSON array of key=value pairs:
+      CMPNT_IMAGE_BUILD_LABELS="${CMPNT_IMAGE_BUILD_LABELS//\'/}"
+      if echo "${CMPNT_IMAGE_BUILD_LABELS}" | jq -e . >/dev/null 2>&1; then
+        while read -r label; do
+          IMAGE_LABELS+=("${label}")
+        done < <(jq -r '.[]' <<< "${CMPNT_IMAGE_BUILD_LABELS}")
+      else
+        IFS=',' read -ra TEMP_ARRAY <<< "${CMPNT_IMAGE_BUILD_LABELS}"
+        IMAGE_LABELS+=("${TEMP_ARRAY[@]}")
+      fi
+
+
+# ============================================================================
+.helpers/image-build/build-args:
+  before_script:
+    - |
+      # --- helpers/image-build/build-args -----------------------------------
+
+
+      # ----------------------------------------------------------------------
+      # Default build args:
+      IMAGE_BUILD_ARG_CI_COMMIT_REF_NAME="${CI_COMMIT_REF_NAME}"
+      IMAGE_BUILD_ARG_CI_COMMIT_SHA="${CI_COMMIT_SHA}"
+      IMAGE_BUILD_ARG_CI_REGISTRY="${CI_REGISTRY}"
+      IMAGE_BUILD_ARG_CI_REGISTRY_IMAGE="${CI_REGISTRY_IMAGE}"
+      IMAGE_BUILD_ARG_CI_SERVER_URL="${CI_SERVER_URL}"
+      IMAGE_BUILD_ARG_CI_COMMIT_REF_SLUG="${CI_COMMIT_REF_SLUG}"
+
+
+      IMAGE_BUILD_ARGS=()
+
+
+      # ----------------------------------------------------------------------
+      # From the environment:
+      for var in $(compgen -v IMAGE_BUILD_ARG_); do
+        name=${var#IMAGE_BUILD_ARG_}
+        value=${!var}
+
+        IMAGE_BUILD_ARGS+=("${name}=${value}")
+      done
+
+      # ----------------------------------------------------------------------
+      # From the component, which arrive as a JSON array of key=value pairs:
+      CMPNT_IMAGE_BUILD_ARGS="${CMPNT_IMAGE_BUILD_ARGS//\'/}"
+      if echo "${CMPNT_IMAGE_BUILD_ARGS}" | jq -e . >/dev/null 2>&1; then
+        while read -r arg; do
+          IMAGE_BUILD_ARGS+=("${arg}")
+        done < <(jq -r '.[]' <<< "${CMPNT_IMAGE_BUILD_ARGS}")
+      else
+        IFS=',' read -ra TEMP_ARRAY <<< "${CMPNT_IMAGE_BUILD_ARGS}"
+        IMAGE_BUILD_ARGS+=("${TEMP_ARRAY[@]}")
+      fi
+
+
+# ============================================================================
+.helpers/image-build/secrets:
+  before_script:
+    - |
+      # --- helpers/image-build/secrets --------------------------------------
+      for name in GLAB_CONFIG_FILE  NETRC  GITLAB_CICD_BOT_TOKEN; do
+        export IMAGE_BUILD_SECRET_${name}="${!name}"
+      done
+
+
+      IMAGE_SECRETS=()
+
+      # ----------------------------------------------------------------------
+      # From the environment:
+      for var in $(compgen -v IMAGE_BUILD_SECRET_); do
+        name=${var#IMAGE_BUILD_SECRET_}
+        id=${name//_/-}
+        id=${id,,}
+        value=${!var}
+
+        if [[ -f ${value} ]]; then
+          IMAGE_SECRETS+=("id=${id},src=${value}")
+        else
+          IMAGE_SECRETS+=("id=${id},env=${name}")
+        fi
+
+      done
+
+      # ----------------------------------------------------------------------
+      # From the component, which arrive as a JSON array of key=value pairs:
+      CMPNT_IMAGE_BUILD_SECRETS="${CMPNT_IMAGE_BUILD_SECRETS//\'/}"
+      if echo "${CMPNT_IMAGE_BUILD_SECRETS}" | jq -e . >/dev/null 2>&1; then
+        while read -r secret; do
+          secret=${secret//\/\//,}
+          IMAGE_SECRETS+=("${secret}")
+        done < <(jq -r '.[]' <<< "${CMPNT_IMAGE_BUILD_SECRETS}")
+      else
+        IFS=',' read -ra TEMP_ARRAY <<< "${CMPNT_IMAGE_BUILD_SECRETS}"
+        for secret in "${TEMP_ARRAY[@]}"; do
+          secret=${secret//\/\//,}
+          IMAGE_SECRETS+=("${secret}")
+        done
+      fi
+
+
+# ============================================================================
+.helpers/image-build/calculate-job-settings:
+  before_script:
+    - |
+      # --- helpers/image-build/calculate-job-settings -----------------------
+      if [[ ${IMAGE_BUILD_PRINT_CLI_TABLE} == true ]]; then
+        JOB_SETTINGS+=("❄️ URI;${IMAGE_URI}:${CI_COMMIT_REF_SLUG}")
+
+        if [[ -n "${IMAGE_TARGET}" ]]; then
+          JOB_SETTINGS+=("🎯 Target;${IMAGE_TARGET}")
+        fi
+
+        JOB_SETTINGS+=("📄 Dockerfile;${IMAGE_DOCKERFILE}")
+        JOB_SETTINGS+=("📂 Context;${IMAGE_CONTEXT}")
+
+        if [[ -n "${IMAGE_IGNOREFILE}" ]]; then
+          JOB_SETTINGS+=("📄 Ignorefile;${IMAGE_IGNOREFILE}")
+        fi
+
+        if [[ -n "${IMAGE_BUILD_ARGS[@]}" ]]; then
+          for arg in "${IMAGE_BUILD_ARGS[@]}"; do
+            name=$(echo "${arg}" | cut -d'=' -f1)
+            value=$(echo "${arg}" | cut -d'=' -f2)
+            JOB_SETTINGS+=("⚙️ Build Arg ${name};${value}")
+          done
+        fi
+
+        if [[ -n "${IMAGE_LABELS[@]}" ]]; then
+          for lbl in "${IMAGE_LABELS[@]}"; do
+            name=$(echo "${lbl}" | cut -d'=' -f1)
+            value=$(echo "${lbl}" | cut -d'=' -f2)
+            JOB_SETTINGS+=("🏷️ Label ${name};${value}")
+          done
+        fi
+
+        if [[ -n "${IMAGE_SECRETS[@]}" ]]; then
+          for secret in "${IMAGE_SECRETS[@]}"; do
+            id=$(echo "${secret}" | cut -d',' -f1 | cut -d'=' -f2)
+            src=$(echo "${secret}" | cut -d',' -f2 | cut -d'=' -f2)
+            JOB_SETTINGS+=("🙈 Secret ${id};${src}")
+          done
+        fi
+
+        if [[ "${PODMAN_BUILD_CLI_ARGS[*]}" == *"--cache-from"* ]]; then
+          JOB_SETTINGS+=('💾 Cache (from);On')
+        fi
+
+        if [[ "${PODMAN_BUILD_CLI_ARGS[*]}" == *"--cache-to"* ]]; then
+          JOB_SETTINGS+=('💾 Cache (to);On')
+        fi
+      fi
