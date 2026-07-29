@@ -21,6 +21,8 @@ workflow:
 image build:
   extends: .image-build
   image: quay.io/podman/stable:v5.8.2
+  variables:
+    IMAGE_NAME: builder
 
 
 # ============================================================================
@@ -32,15 +34,21 @@ image build:
 image unit-test:
   extends: .image-unit-test
   image: $CI_REGISTRY_IMAGE:build.$CI_PIPELINE_IID
+  variables:
+    IMAGE_NAME: builder
 
 
 # ============================================================================
 image structure-test:
   extends: .image-structure-test
   image: $CI_REGISTRY_IMAGE:build.$CI_PIPELINE_IID
+  variables:
+    IMAGE_NAME: builder
 
 
 # ============================================================================
 image promote:
   extends: .image-promote
   image: $CI_REGISTRY_IMAGE:build.$CI_PIPELINE_IID
+  variables:
+    IMAGE_NAME: builder
