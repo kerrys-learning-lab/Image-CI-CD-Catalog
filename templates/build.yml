@@ -82,8 +82,8 @@ spec:
 
 # ============================================================================
 include:
-  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/defaults@release/0.1
-  - local: .base-jobs.gitlab-ci.yml
+  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/defaults@release/0.2
+  - local: .build.gitlab-ci.yml
 
 
 # ============================================================================
