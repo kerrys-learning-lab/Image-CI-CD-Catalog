@@ -6,10 +6,10 @@ include:
 # ============================================================================
 # Use Google Container Structure Test to validate this image
 .image-structure-test:
-  extends: .image-build
+  extends: .image-base
   stage: test
   variables:
-    CST_CONFIG_FILEPATH: tests/container-structure-test.yml
+    CST_CONFIG_FILEPATH: tests/image-structure-test.yml
     IMAGE_BUILD_PRINT_CLI_TABLE: false
   before_script:
     - |
@@ -21,8 +21,8 @@ include:
         echo "           Path: ${CST_CONFIG_FILEPATH}"
         exit 10
       fi
-    - !reference [.mage-structure-test//setup,  before_script]
-    - !reference [.image-build,                 before_script]
+    - !reference [.image-structure-test//setup, before_script]
+    - !reference [.image-base,                  before_script]
     - !reference [default,                      before_script]
   script:
     - |
@@ -58,7 +58,7 @@ include:
       fi
 
       exit ${CST_EXIT_CODE}
-    - !reference [.mage-structure-test//teardown, before_script]
+    - !reference [.image-structure-test//teardown, before_script]
   artifacts:
     paths:
       - ${JOB_ARTIFACTS_DIR}
@@ -69,7 +69,7 @@ include:
 
 
 # ============================================================================
-.mage-structure-test//setup:
+.image-structure-test//setup:
   before_script:
     - |
       # --- mage-structure-test//setup ---------------------------------------
@@ -78,9 +78,29 @@ include:
       podman system service --time=300 ${DOCKER_HOST} &
       PODMAN_SERVICE_PID=$!
 
+      PODMAN_SERVICE_PING_URL=http://localhost/libpod/_ping
+      PODMAN_SERVICE_MAX_RETRIES=5
+      PODMAN_SERVICE_CONNECTED=false
+
+      for i in $(seq 1 ${PODMAN_SERVICE_MAX_RETRIES}); do
+        sleep 1
+
+        if curl --silent --unix-socket ${JOB_SOCKET_PATH} ${PODMAN_SERVICE_PING_URL}; then
+          PODMAN_SERVICE_CONNECTED=true
+          break
+        fi
+      done
+
+      if [[ ${PODMAN_SERVICE_CONNECTED} == true ]]; then
+        echo "🟢 Connected to Podman API at ${JOB_SOCKET_PATH}"
+      else
+        echo "❌ Error:  Unable to ping Podman service at ${JOB_SOCKET_PATH}"
+        exit 10
+      fi
+
 
 # ============================================================================
-.mage-structure-test//teardown:
+.image-structure-test//teardown:
   before_script:
     - |
       # --- mage-structure-test//teardown ------------------------------------

@@ -33,7 +33,7 @@ image build:
 # ============================================================================
 image unit-test:
   extends: .image-unit-test
-  image: $CI_REGISTRY_IMAGE:build.$CI_PIPELINE_IID
+  image: $CI_REGISTRY_IMAGE/builder:build.$CI_PIPELINE_IID
   variables:
     IMAGE_NAME: builder
 
@@ -41,7 +41,7 @@ image unit-test:
 # ============================================================================
 image structure-test:
   extends: .image-structure-test
-  image: $CI_REGISTRY_IMAGE:build.$CI_PIPELINE_IID
+  image: $CI_REGISTRY_IMAGE/builder:build.$CI_PIPELINE_IID
   variables:
     IMAGE_NAME: builder
 
@@ -49,6 +49,6 @@ image structure-test:
 # ============================================================================
 image promote:
   extends: .image-promote
-  image: $CI_REGISTRY_IMAGE:build.$CI_PIPELINE_IID
+  image: $CI_REGISTRY_IMAGE/builder:build.$CI_PIPELINE_IID
   variables:
     IMAGE_NAME: builder
