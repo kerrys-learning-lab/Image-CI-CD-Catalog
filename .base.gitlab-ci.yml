@@ -1,0 +1,58 @@
+# ============================================================================
+include:
+  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/defaults@release/0.1
+
+
+# ============================================================================
+.image-base:
+  image: $CI_REGISTRY/kerrys-learning-lab/devsecops/cicd-catalog/image:release-0.1
+  variables:
+    IMAGE_NAME: ''
+    IMAGE_TARGET: ''
+    IMAGE_INTERIM_TAG: build.${CI_PIPELINE_IID}
+    REGISTRY_AUTH_FILE: .registry.auth.json
+  before_script:
+    - !reference [.image-base//login-ci-registry,    before_script]
+    - !reference [.image-base//login-base-registry,  before_script]
+    - |
+      # --- image base (before) ----------------------------------------------
+
+      # ----------------------------------------------------------------------
+      # Image identity:
+      IMAGE_URI=${CI_REGISTRY_IMAGE}
+
+      if [[ -z "${IMAGE_NAME}" && -n "${IMAGE_TARGET}" ]]; then
+        IMAGE_NAME=${IMAGE_TARGET}
+      fi
+
+      if [[ -n "${IMAGE_NAME}" ]]; then
+        IMAGE_URI+=/${IMAGE_NAME}
+      else
+        IMAGE_NAME=$(basename ${IMAGE_URI})
+      fi
+
+
+# ============================================================================
+.image-base//login-ci-registry:
+  before_script:
+    - |
+      # --- image-base//login-ci-registry ------------------------------------
+      echo "🔓 Logging in to CI registry: ${CI_REGISTRY}"
+
+      printf '%s' "${CI_REGISTRY_PASSWORD}" | podman login  --password-stdin  \
+                                                            --username ${CI_REGISTRY_USER}  \
+                                                            ${CI_REGISTRY}
+
+
+# ============================================================================
+.image-base//login-base-registry:
+  before_script:
+    - |
+      # --- image-base//login-base-registry ----------------------------------
+      if [[ -n "${BASE_REGISTRY}" && -n "${BASE_REGISTRY_USER}" && -n "${BASE_REGISTRY_PASSWORD}" ]]; then
+        echo "🔓 Logging in to base registry: ${BASE_REGISTRY}"
+
+        printf '%s' "${BASE_REGISTRY_PASSWORD}" | podman login  --password-stdin  \
+                                                                --username ${BASE_REGISTRY_USER}  \
+                                                                ${BASE_REGISTRY}
+      fi

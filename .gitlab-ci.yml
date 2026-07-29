@@ -4,7 +4,10 @@ include:
   - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/defaults@release/0.1
   - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/release@release/0.1
   - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/semver@release/0.1
-  - local: .base-jobs.gitlab-ci.yml
+  - local: .build.gitlab-ci.yml
+  - local: .unit-test.gitlab-ci.yml
+  - local: .structure-test.gitlab-ci.yml
+  - local: .promote.gitlab-ci.yml
 
 
 # ============================================================================
