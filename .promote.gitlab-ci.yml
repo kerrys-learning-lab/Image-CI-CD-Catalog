@@ -1,0 +1,79 @@
+# ============================================================================
+include:
+  - local: .base.gitlab-ci.yml
+
+
+# ============================================================================
+# Promotes this project's image by renaming from the interim build tag to the
+# appropriate refs (e.g., CI_COMMIT_REF_NAME, GITLABCI_RELEASE_TRAIN, SEMANTIC_VERSION_SLUG)
+.image-promote:
+  extends: .image-base
+  stage: publish
+  interruptible: false
+  variables:
+    IMAGE_PROMOTE_DEFAULT_BRANCH_VERSION_SLUG: true
+    IMAGE_PROMOTE_RELEASE_TRAIN: true
+    IMAGE_PROMOTE_SEMANTIC_VERSION_SLUG: true
+  before_script:
+    - !reference [.image-base,  before_script]
+    - |
+      # --- image promote (before) -------------------------------------------
+      declare -A IMAGE_PROMOTE_TAGS
+
+      IMAGE_PROMOTE_TAGS["Commit Ref"]=${CI_COMMIT_REF_NAME//\//-}
+
+      if [[ -n "${DEFAULT_BRANCH_VERSION_SLUG}" && ${IMAGE_PROMOTE_DEFAULT_BRANCH_VERSION_SLUG} == true ]]; then
+        IMAGE_PROMOTE_TAGS["Default Branch"]=${DEFAULT_BRANCH_VERSION_SLUG}
+      fi
+
+      if [[ -n "${RELEASE_TRAIN}" && ${IMAGE_PROMOTE_RELEASE_TRAIN} == true ]]; then
+        IMAGE_PROMOTE_TAGS["Release Train"]=${RELEASE_TRAIN}
+      fi
+
+      if [[ -n "${SEMANTIC_VERSION_SLUG}" && ${IMAGE_PROMOTE_SEMANTIC_VERSION_SLUG} == true ]]; then
+        IMAGE_PROMOTE_TAGS["Semantic Version"]=${SEMANTIC_VERSION_SLUG}
+      fi
+  script:
+    - |
+      # --- image-promote ----------------------------------------------------
+      for title in "${!IMAGE_PROMOTE_TAGS[@]}"; do
+        tag=${IMAGE_PROMOTE_TAGS["${title}"]}
+
+        echo "🚀 Publishing ${title} tag: ${IMAGE_URI}:${tag}"
+        skopeo copy --quiet docker://${IMAGE_URI}:${IMAGE_INTERIM_TAG}  \
+                            docker://${IMAGE_URI}:${tag}
+      done
+    - !reference [.image-release-notes, script]
+  artifacts:
+    paths:
+      - ${RELEASE_NOTES_DIR}
+
+
+# ============================================================================
+.image-release-notes:
+  script:
+    - |
+      # --- image release notes ----------------------------------------------
+      mkdir -p ${RELEASE_NOTES_DIR}/image
+
+      IMAGE_RELEASE_NOTES_FILEPATH=${RELEASE_NOTES_DIR}/image/${CI_JOB_NAME_SLUG}.md
+
+      SECTION_TITLE=${IMAGE_NAME}
+      if [[ -z "${SECTION_TITLE}" ]]; then
+        SECTION_TITLE=$(basename ${IMAGE_URI})
+      fi
+
+      echo "### Image: ${SECTION_TITLE}"  >> ${IMAGE_RELEASE_NOTES_FILEPATH}
+      echo ""                             >> ${IMAGE_RELEASE_NOTES_FILEPATH}
+
+      for title in "${!IMAGE_PROMOTE_TAGS[@]}"; do
+        tag=${IMAGE_PROMOTE_TAGS["${title}"]}
+
+        # --- Append the tag information to the Release Notes:
+        echo "- ${title}"                               >> ${IMAGE_RELEASE_NOTES_FILEPATH}
+        echo ""                                         >> ${IMAGE_RELEASE_NOTES_FILEPATH}
+        echo "  \`\`\`bash"                             >> ${IMAGE_RELEASE_NOTES_FILEPATH}
+        echo "  podman image pull ${IMAGE_URI}:${tag}"  >> ${IMAGE_RELEASE_NOTES_FILEPATH}
+        echo "  \`\`\`"                                 >> ${IMAGE_RELEASE_NOTES_FILEPATH}
+        echo ""                                         >> ${IMAGE_RELEASE_NOTES_FILEPATH}
+      done

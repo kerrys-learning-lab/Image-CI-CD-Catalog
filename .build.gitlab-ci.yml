@@ -1,8 +1,105 @@
 # ============================================================================
-.helpers/image-build/labels:
+include:
+  - local: .base.gitlab-ci.yml
+
+
+# ============================================================================
+.image-build:
+  stage: build
+  extends: .image-base
+  interruptible: true
+  variables:
+    IMAGE_CONTEXT: .
+    IMAGE_DOCKERFILE: Dockerfile
+    IMAGE_IGNOREFILE: .dockerignore
+    IMAGE_BUILD_CACHE_MODE: default
+    IMAGE_BUILD_PUSH_INTERIM: true
+    IMAGE_BUILD_PRINT_CLI_TABLE: true
+  before_script:
+    - !reference [.image-base,                before_script]
+    - !reference [.image-build//labels,       before_script]
+    - !reference [.image-build//build-args,   before_script]
+    - !reference [.image-build//secrets,      before_script]
+    - |
+      # --- image build (before) ---------------------------------------------
+      PODMAN_BUILD_CLI_ARGS+=(--tag ${IMAGE_URI}:${IMAGE_INTERIM_TAG})
+
+
+      # ----------------------------------------------------------------------
+      # Dockerfile:
+      IMAGE_DOCKERFILE=${IMAGE_DOCKERFILE:-Dockerfile}
+      if [[ -f ${IMAGE_CONTEXT}/${IMAGE_DOCKERFILE} ]]; then
+        IMAGE_DOCKERFILE=${IMAGE_CONTEXT}/${IMAGE_DOCKERFILE}
+      fi
+      PODMAN_BUILD_CLI_ARGS+=(--file ${IMAGE_DOCKERFILE})
+
+
+      # ----------------------------------------------------------------------
+      # Ignorefile:
+      if [[ -f ${IMAGE_CONTEXT}/${IMAGE_IGNOREFILE} ]]; then
+        IMAGE_IGNOREFILE=${IMAGE_CONTEXT}/${IMAGE_IGNOREFILE}
+      fi
+      if [[ -f ${IMAGE_IGNOREFILE} ]]; then
+        PODMAN_BUILD_CLI_ARGS+=(--ignorefile ${IMAGE_IGNOREFILE})
+      fi
+
+
+      # ----------------------------------------------------------------------
+      # Custom build target, if applicable:
+      if [[ -n "${IMAGE_TARGET}" ]]; then
+        PODMAN_BUILD_CLI_ARGS+=(--target ${IMAGE_TARGET})
+      fi
+
+
+      # ----------------------------------------------------------------------
+      # Cache, if applicable:
+      PODMAN_BUILD_CLI_ARGS+=(--layers)
+      if [[ ${IMAGE_BUILD_CACHE_MODE} =~ ^(default|from|force)$ ]]; then
+        PODMAN_BUILD_CLI_ARGS+=(--cache-from=${IMAGE_URI})
+      fi
+      if [[ ${IMAGE_BUILD_CACHE_MODE} == force ||
+            (${IMAGE_BUILD_CACHE_MODE} =~ ^(default|to)$  &&  ${CI_COMMIT_REF_PROTECTED} == true) ]]; then
+        PODMAN_BUILD_CLI_ARGS+=(--cache-to=${IMAGE_URI})
+      fi
+
+      # ----------------------------------------------------------------------
+      # Labels, build-args, and secrets (calculated above):
+      for label in "${IMAGE_LABELS[@]}"; do
+        PODMAN_BUILD_CLI_ARGS+=(--label "${label}")
+      done
+
+      for arg in "${IMAGE_BUILD_ARGS[@]}"; do
+        PODMAN_BUILD_CLI_ARGS+=(--build-arg "${arg}")
+      done
+
+      for secret in "${IMAGE_SECRETS[@]}"; do
+        PODMAN_BUILD_CLI_ARGS+=(--secret "${secret}")
+      done
+
+
+      # ----------------------------------------------------------------------
+      # Context (must be the last argument, it's positional)
+      PODMAN_BUILD_CLI_ARGS+=(${IMAGE_CONTEXT})
+
+    - !reference [.image-build//calculate-job-settings,  before_script]
+    - !reference [default,                               before_script]
+  script:
+    - |
+      # --- image build ------------------------------------------------------
+      echo "🛠️ Building ${IMAGE_URI}:${IMAGE_INTERIM_TAG}"
+
+      podman image build "${PODMAN_BUILD_CLI_ARGS[@]}"
+
+      if [[ ${IMAGE_BUILD_PUSH_INTERIM} == true ]]; then
+        podman image push --quiet ${IMAGE_URI}:${IMAGE_INTERIM_TAG}
+      fi
+
+
+# ============================================================================
+.image-build//labels:
   before_script:
     - |
-      # --- helpers/image-build/labels ---------------------------------------
+      # --- image-build//labels ----------------------------------------------
 
       # ----------------------------------------------------------------------
       # Default image labels:
@@ -48,10 +145,10 @@
 
 
 # ============================================================================
-.helpers/image-build/build-args:
+.image-build//build-args:
   before_script:
     - |
-      # --- helpers/image-build/build-args -----------------------------------
+      # --- image-build//build-args ------------------------------------------
 
 
       # ----------------------------------------------------------------------
@@ -90,10 +187,10 @@
 
 
 # ============================================================================
-.helpers/image-build/secrets:
+.image-build//secrets:
   before_script:
     - |
-      # --- helpers/image-build/secrets --------------------------------------
+      # --- image-build//secrets ---------------------------------------------
       for name in GLAB_CONFIG_FILE  NETRC  GITLAB_CICD_BOT_TOKEN; do
         export IMAGE_BUILD_SECRET_${name}="${!name}"
       done
@@ -135,10 +232,10 @@
 
 
 # ============================================================================
-.helpers/image-build/calculate-job-settings:
+.image-build//calculate-job-settings:
   before_script:
     - |
-      # --- helpers/image-build/calculate-job-settings -----------------------
+      # --- image-build//calculate-job-settings ------------------------------
       if [[ ${IMAGE_BUILD_PRINT_CLI_TABLE} == true ]]; then
         JOB_SETTINGS+=("❄️ URI;${IMAGE_URI}:${CI_COMMIT_REF_SLUG}")
 
