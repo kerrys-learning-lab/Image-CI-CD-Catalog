@@ -37,7 +37,7 @@ FROM base AS unittest
 # This is the bare minimum to "fake" a unit-test, so that we can test our
 # own unittest target:
 ENTRYPOINT ["/usr/bin/touch"]
-CMD ["/var/tmp/test-results.xml "]
+CMD ["/var/tmp/test-results.xml"]
 
 
 # ============================================================================
