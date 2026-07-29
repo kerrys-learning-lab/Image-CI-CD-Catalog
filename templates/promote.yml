@@ -53,7 +53,7 @@ spec:
 
 # ============================================================================
 include:
-  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/defaults@release/0.2
+  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/defaults@main
   - local: .promote.gitlab-ci.yml
 
 
