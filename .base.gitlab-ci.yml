@@ -5,7 +5,7 @@ include:
 
 # ============================================================================
 .image-base:
-  image: $CI_REGISTRY/kerrys-learning-lab/devsecops/cicd-catalog/image:release-0.1
+  image: $CI_REGISTRY/kerrys-learning-lab/devsecops/cicd-catalog/image/builder:release-0.1
   variables:
     IMAGE_NAME: ''
     IMAGE_TARGET: ''
