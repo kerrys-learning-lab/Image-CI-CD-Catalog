@@ -282,7 +282,7 @@ include:
   - local: templates/structure-test.yml
     inputs:
       name: $[[ inputs.name ]]
-      target: $[[ inputs.unit_test_target ]]
+      target: $[[ inputs.target ]]
       context: $[[ inputs.context ]]
       structure_test_filename: $[[ inputs.structure_test_filename ]]
       stage: $[[ inputs.structure_test_stage ]]

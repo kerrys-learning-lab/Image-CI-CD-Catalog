@@ -21,58 +21,7 @@ include:
         echo "           Path: ${CST_CONFIG_FILEPATH}"
         exit 10
       fi
-    - !reference [.image-structure-test//setup, before_script]
-    - !reference [.image-base,                  before_script]
-    - !reference [default,                      before_script]
-  script:
-    - |
-      # --- image-structure-test ---------------------------------------------
-      IMAGE_STRUCTURE_TEST_CLI_ARGS=()
-      IMAGE_STRUCTURE_TEST_CLI_ARGS+=(test)
-      IMAGE_STRUCTURE_TEST_CLI_ARGS+=(--output junit)
-      IMAGE_STRUCTURE_TEST_CLI_ARGS+=(--test-report ${JOB_ARTIFACTS_DIR}/structure-test-results.xml)
-      IMAGE_STRUCTURE_TEST_CLI_ARGS+=(--image ${IMAGE_URI}:${IMAGE_INTERIM_TAG})
-      IMAGE_STRUCTURE_TEST_CLI_ARGS+=(--config ${CST_CONFIG_FILEPATH})
 
-      echo "⤵️ Pulling ${IMAGE_URI}:${IMAGE_INTERIM_TAG}..."
-      podman image pull --quiet ${IMAGE_URI}:${IMAGE_INTERIM_TAG}
-
-      # ----------------------------------------------------------------------
-      # Run the structure test
-      #
-      #   - We disable the "exit on any error" logic, but capture the exit code
-      #   - This allows us to print additional failure information to the Job
-      #     log to make the failure investigation easier
-      set +e
-      echo "📋 Structure testing ${IMAGE_URI}"
-      container-structure-test "${IMAGE_STRUCTURE_TEST_CLI_ARGS[@]}"
-      CST_EXIT_CODE=$?
-      set -e
-
-      if [[ ${CST_EXIT_CODE} -ne 0 ]] ; then
-        echo "❌ container-structure-test FAILED"
-
-        if [[ -f ${JOB_ARTIFACTS_DIR}/structure-test-results.xml ]]; then
-          xq --color ${JOB_ARTIFACTS_DIR}/structure-test-results.xml
-        fi
-      fi
-
-      exit ${CST_EXIT_CODE}
-    - !reference [.image-structure-test//teardown, before_script]
-  artifacts:
-    paths:
-      - ${JOB_ARTIFACTS_DIR}
-    reports:
-      junit: ${JOB_ARTIFACTS_DIR}/**.xml
-    when: always
-    expire_in: 1 week
-
-
-# ============================================================================
-.image-structure-test//setup:
-  before_script:
-    - |
-      # --- mage-structure-test//setup ---------------------------------------
       JOB_SOCKET_PATH=/var/tmp/${CI_JOB_ID}.sock
       export DOCKER_HOST=unix://${JOB_SOCKET_PATH}
       podman system service --time=300 ${DOCKER_HOST} &
@@ -97,11 +46,47 @@ include:
         echo "❌ Error:  Unable to ping Podman service at ${JOB_SOCKET_PATH}"
         exit 10
       fi
-
-
-# ============================================================================
-.image-structure-test//teardown:
-  before_script:
+    - !reference [.image-base,  before_script]
+    - !reference [default,      before_script]
+  script:
     - |
-      # --- mage-structure-test//teardown ------------------------------------
+      # --- image-structure-test ---------------------------------------------
+      IMAGE_STRUCTURE_TEST_CLI_ARGS=()
+      IMAGE_STRUCTURE_TEST_CLI_ARGS+=(test)
+      IMAGE_STRUCTURE_TEST_CLI_ARGS+=(--output junit)
+      IMAGE_STRUCTURE_TEST_CLI_ARGS+=(--test-report ${JOB_ARTIFACTS_DIR}/structure-test-results.xml)
+      IMAGE_STRUCTURE_TEST_CLI_ARGS+=(--image ${IMAGE_URI}:${IMAGE_INTERIM_TAG})
+      IMAGE_STRUCTURE_TEST_CLI_ARGS+=(--config ${CST_CONFIG_FILEPATH})
+
+      echo "⤵️ Pulling ${IMAGE_URI}:${IMAGE_INTERIM_TAG}..."
+      podman image pull --quiet ${IMAGE_URI}:${IMAGE_INTERIM_TAG}
+
+      # ----------------------------------------------------------------------
+      # Run the structure test
+      #
+      #   - We disable the "exit on any error" logic, but capture the exit code
+      #   - This allows us to print additional failure information to the Job
+      #     log to make the failure investigation easier
+      set +e
+      echo "📋 Structure testing ${IMAGE_URI}"
+      container-structure-test "${IMAGE_STRUCTURE_TEST_CLI_ARGS[@]}"
+      CST_EXIT_CODE=$?
       kill -9 ${PODMAN_SERVICE_PID}
+      set -e
+
+      if [[ ${CST_EXIT_CODE} -ne 0 ]] ; then
+        echo "❌ container-structure-test FAILED"
+
+        if [[ -f ${JOB_ARTIFACTS_DIR}/structure-test-results.xml ]]; then
+          xq --color ${JOB_ARTIFACTS_DIR}/structure-test-results.xml
+        fi
+      fi
+
+      exit ${CST_EXIT_CODE}
+  artifacts:
+    paths:
+      - ${JOB_ARTIFACTS_DIR}
+    reports:
+      junit: ${JOB_ARTIFACTS_DIR}/**.xml
+    when: always
+    expire_in: 1 week

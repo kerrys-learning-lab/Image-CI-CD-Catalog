@@ -192,7 +192,11 @@ include:
     - |
       # --- image-build//secrets ---------------------------------------------
       for name in GLAB_CONFIG_FILE  NETRC  GITLAB_CICD_BOT_TOKEN; do
-        export IMAGE_BUILD_SECRET_${name}="${!name}"
+        if [[ -n "${!name}" ]]; then
+          export IMAGE_BUILD_SECRET_${name}="${!name}"
+        else
+          echo "⚠️ Warning: Missing value for secret: ${name}"
+        fi
       done
 
 
