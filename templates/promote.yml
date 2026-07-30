@@ -65,7 +65,7 @@ include:
     IMAGE_NAME: $[[ inputs.name ]]
     IMAGE_TARGET: $[[ inputs.target ]]
     IMAGE_PROMOTE_RELEASE_TRAIN: $[[ inputs.promote_release_train ]]
-    IMAGE_PROMOTE_SEMANTIC_VERSION_SLUG: $[[ inputs.promote_semantic_version ]]
+    IMAGE_PROMOTE_SEMANTIC_VERSION: $[[ inputs.promote_semantic_version ]]
   rules:
     - if: '"$[[ inputs.promote_mode ]]" == "skip"'
       when: never

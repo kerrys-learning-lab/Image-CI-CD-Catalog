@@ -82,5 +82,6 @@ include:
     IMAGE_DOCKERFILE: $[[ inputs.dockerfile ]]
     IMAGE_TARGET: $[[ inputs.target ]]
     IMAGE_IGNOREFILE: $[[ inputs.ignorefile ]]
-    COMPONENT_INPUT_IMAGE_BUILD_ARGS: "'$[[ inputs.build_args ]]'"
-    COMPONENT_INPUT_IMAGE_BUILD_SECRETS: "'$[[ inputs.build_secrets ]]'"
+    CONTAINER_RESULTS_PATH: $[[ inputs.container_test_results_path ]]
+    CMPNT_IMAGE_BUILD_ARGS: "'$[[ inputs.build_args ]]'"
+    CMPNT_IMAGE_BUILD_SECRETS: "'$[[ inputs.build_secrets ]]'"

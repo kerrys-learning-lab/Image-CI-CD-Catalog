@@ -97,9 +97,9 @@ include:
     IMAGE_TARGET: $[[ inputs.target ]]
     IMAGE_IGNOREFILE: $[[ inputs.ignorefile ]]
     IMAGE_BUILD_CACHE_MODE: $[[ inputs.cache_mode ]]
-    COMPONENT_INPUT_IMAGE_BUILD_ARGS: "'$[[ inputs.build_args ]]'"
-    COMPONENT_INPUT_IMAGE_BUILD_LABELS: "'$[[ inputs.build_labels ]]'"
-    COMPONENT_INPUT_IMAGE_BUILD_SECRETS: "'$[[ inputs.build_secrets ]]'"
+    CMPNT_IMAGE_BUILD_ARGS: "'$[[ inputs.build_args ]]'"
+    CMPNT_IMAGE_BUILD_LABELS: "'$[[ inputs.build_labels ]]'"
+    CMPNT_IMAGE_BUILD_SECRETS: "'$[[ inputs.build_secrets ]]'"
   needs:
     - pipeline version
     - $[[ inputs.needs ]]
