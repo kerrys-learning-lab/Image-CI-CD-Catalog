@@ -1,6 +1,16 @@
 spec:
 
   inputs:
+
+
+    # ------------------------------------------------------------------------
+    # These settings affect the SemVer component which is automatically added
+    # to the Pipeline:
+    semver_strict:
+      description: See foundation/templates/semver.yml
+      type: boolean
+      default: true
+
     # ------------------------------------------------------------------------
     # These settings affect the image artifact
     name:
@@ -238,6 +248,8 @@ include:
 
   # --------------------------------------------------------------------------
   - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/semver@release/0.2
+    inputs:
+      strict: $[[ inputs.semver_strict ]]
   - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/release@release/0.2
   - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/merge-forward@release/0.2
 
