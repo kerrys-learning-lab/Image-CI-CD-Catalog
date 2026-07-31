@@ -77,6 +77,12 @@ spec:
       default: ''
 
 
+  component:
+    - name
+    - version
+    - reference
+
+
 ---
 
 
@@ -91,6 +97,8 @@ include:
   stage: $[[ inputs.stage ]]
   extends: .image-build
   variables:
+    COMPONENT_NAME: $[[ component.name ]]
+    COMPONENT_REFERENCE: $[[ component.reference ]]
     IMAGE_NAME: $[[ inputs.name ]]
     IMAGE_CONTEXT: $[[ inputs.context ]]
     IMAGE_DOCKERFILE: $[[ inputs.dockerfile ]]
