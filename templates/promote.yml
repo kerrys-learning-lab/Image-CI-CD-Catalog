@@ -48,6 +48,12 @@ spec:
       default: ''
 
 
+  component:
+    - name
+    - version
+    - reference
+
+
 ---
 
 
@@ -62,6 +68,8 @@ include:
   stage: $[[ inputs.stage ]]
   extends: .image-promote
   variables:
+    COMPONENT_NAME: $[[ component.name ]]
+    COMPONENT_REFERENCE: $[[ component.reference ]]
     IMAGE_NAME: $[[ inputs.name ]]
     IMAGE_TARGET: $[[ inputs.target ]]
     IMAGE_PROMOTE_RELEASE_TRAIN: $[[ inputs.promote_release_train ]]
