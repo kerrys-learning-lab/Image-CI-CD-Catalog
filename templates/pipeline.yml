@@ -11,6 +11,11 @@ spec:
       type: boolean
       default: true
 
+    default_semver_prefix:
+      description:  See foundation/templates/semver.yml
+      type: string
+      default: v0.0.0
+
     # ------------------------------------------------------------------------
     # These settings affect the image artifact
     name:
@@ -250,6 +255,7 @@ include:
   - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/semver@release/0.2
     inputs:
       strict: $[[ inputs.semver_strict ]]
+      default_semver_prefix: $[[ inputs.default_semver_prefix ]]
   - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/release@release/0.2
   - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/merge-forward@release/0.2
 
