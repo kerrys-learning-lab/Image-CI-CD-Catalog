@@ -261,7 +261,7 @@ include:
 
 
   # --------------------------------------------------------------------------
-  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/image/build@release/0.1
+  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/image/build@release/0.2
     inputs:
       name: $[[ inputs.name ]]
       dockerfile: $[[ inputs.dockerfile ]]
@@ -279,7 +279,7 @@ include:
 
 
   # --------------------------------------------------------------------------
-  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/image/unit-test@release/0.1
+  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/image/unit-test@release/0.2
     inputs:
       name: $[[ inputs.name ]]
       dockerfile: $[[ inputs.dockerfile ]]
@@ -297,7 +297,7 @@ include:
 
 
   # --------------------------------------------------------------------------
-  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/image/structure-test@release/0.1
+  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/image/structure-test@release/0.2
     inputs:
       name: $[[ inputs.name ]]
       target: $[[ inputs.target ]]
@@ -311,7 +311,7 @@ include:
 
 
   # --------------------------------------------------------------------------
-  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/image/promote@release/0.1
+  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/image/promote@release/0.2
     inputs:
       name: $[[ inputs.name ]]
       target: $[[ inputs.target ]]
