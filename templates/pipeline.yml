@@ -1,6 +1,16 @@
 spec:
 
   inputs:
+
+
+    # ------------------------------------------------------------------------
+    # These settings affect the SemVer component which is automatically added
+    # to the Pipeline:
+    semver_strict:
+      description: See foundation/templates/semver.yml
+      type: boolean
+      default: true
+
     # ------------------------------------------------------------------------
     # These settings affect the image artifact
     name:
@@ -238,12 +248,14 @@ include:
 
   # --------------------------------------------------------------------------
   - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/semver@main
+    inputs:
+      strict: $[[ inputs.semver_strict ]]
   - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/release@main
   - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/merge-forward@main
 
 
   # --------------------------------------------------------------------------
-  - local: templates/build.yml
+  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/image/build@release/0.1
     inputs:
       name: $[[ inputs.name ]]
       dockerfile: $[[ inputs.dockerfile ]]
@@ -261,7 +273,7 @@ include:
 
 
   # --------------------------------------------------------------------------
-  - local: templates/unit-test.yml
+  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/image/unit-test@release/0.1
     inputs:
       name: $[[ inputs.name ]]
       dockerfile: $[[ inputs.dockerfile ]]
@@ -279,7 +291,7 @@ include:
 
 
   # --------------------------------------------------------------------------
-  - local: templates/structure-test.yml
+  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/image/structure-test@release/0.1
     inputs:
       name: $[[ inputs.name ]]
       target: $[[ inputs.target ]]
@@ -293,7 +305,7 @@ include:
 
 
   # --------------------------------------------------------------------------
-  - local: templates/promote.yml
+  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/image/promote@release/0.1
     inputs:
       name: $[[ inputs.name ]]
       target: $[[ inputs.target ]]
