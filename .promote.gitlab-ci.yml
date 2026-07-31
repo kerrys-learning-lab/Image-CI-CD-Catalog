@@ -5,7 +5,7 @@ include:
 
 # ============================================================================
 # Promotes this project's image by renaming from the interim build tag to the
-# appropriate refs (e.g., CI_COMMIT_REF_NAME, GITLABCI_RELEASE_TRAIN, SEMANTIC_VERSION_SLUG)
+# appropriate refs (e.g., CI_COMMIT_REF_NAME, GITLABCI_RELEASE_TRAIN, SEMANTIC_VERSION)
 .image-promote:
   extends: .image-base
   stage: publish
@@ -13,7 +13,7 @@ include:
   variables:
     IMAGE_PROMOTE_DEFAULT_BRANCH_VERSION_SLUG: true
     IMAGE_PROMOTE_RELEASE_TRAIN: true
-    IMAGE_PROMOTE_SEMANTIC_VERSION_SLUG: true
+    IMAGE_PROMOTE_SEMANTIC_VERSION: true
   before_script:
     - !reference [.image-base,  before_script]
     - |
@@ -30,8 +30,8 @@ include:
         IMAGE_PROMOTE_TAGS["Release Train"]=${RELEASE_TRAIN}
       fi
 
-      if [[ -n "${SEMANTIC_VERSION_SLUG}" && ${IMAGE_PROMOTE_SEMANTIC_VERSION_SLUG} == true ]]; then
-        IMAGE_PROMOTE_TAGS["Semantic Version"]=${SEMANTIC_VERSION_SLUG}
+      if [[ -n "${SEMANTIC_VERSION}" && ${IMAGE_PROMOTE_SEMANTIC_VERSION} == true ]]; then
+        IMAGE_PROMOTE_TAGS["Semantic Version"]=${SEMANTIC_VERSION}
       fi
   script:
     - |

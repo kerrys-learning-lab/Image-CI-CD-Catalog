@@ -11,7 +11,7 @@ include:
   variables:
     IMAGE_TARGET: unittest
     IMAGE_BUILD_PUSH_INTERIM: false
-    IMAGE_BUILD_CACHE_MODE: none
+    IMAGE_BUILD_CACHE_MODE: from
     CONTAINER_RESULTS_PATH: /var/tmp/test-results.xml # Location *within the
                                                       # container* where xunit
                                                       # report will be written
@@ -22,18 +22,31 @@ include:
       # --- image unit-test (before) -----------------------------------------
       mkdir -p ${JOB_ARTIFACTS_DIR}
 
-      podman secret rm --all
-      podman secret create --env=true GITLAB_CICD_BOT_TOKEN   GITLAB_CICD_BOT_TOKEN
-      podman secret create            glab-config-file        ${GLAB_CONFIG_FILE}
-      podman secret create            netrc                   ${NETRC}
-
       IMAGE_RUN_CLI_ARGS=()
       IMAGE_RUN_CLI_ARGS+=(--rm)
       IMAGE_RUN_CLI_ARGS+=(--tty)
-      IMAGE_RUN_CLI_ARGS+=(--secret glab-config-file,type=mount,target=/root/config/glab/config.yml,mode=0666)
-      IMAGE_RUN_CLI_ARGS+=(--secret netrc,type=mount,target=/root/.netrc)
-      IMAGE_RUN_CLI_ARGS+=(--secret GITLAB_CICD_BOT_TOKEN,type=env)
       IMAGE_RUN_CLI_ARGS+=(--volume ${JOB_ARTIFACTS_DIR}:$(dirname ${CONTAINER_RESULTS_PATH}))
+
+      if [[ -n "${GITLAB_CICD_BOT_TOKEN}" ]]; then
+        podman secret create --replace --env=true GITLAB_CICD_BOT_TOKEN   GITLAB_CICD_BOT_TOKEN
+        IMAGE_RUN_CLI_ARGS+=(--secret GITLAB_CICD_BOT_TOKEN,type=env)
+      else
+        echo "⚠️ Warning: Missing value for secret: GITLAB_CICD_BOT_TOKEN"
+      fi
+
+      if [[ -n "${GLAB_CONFIG_FILE}" ]]; then
+        podman secret create --replace  glab-config-file  ${GLAB_CONFIG_FILE}
+        IMAGE_RUN_CLI_ARGS+=(--secret glab-config-file,type=mount,target=/root/config/glab/config.yml,mode=0666)
+      else
+        echo "⚠️ Warning: Missing value for secret: GLAB_CONFIG_FILE"
+      fi
+
+      if [[ -n "${NETRC}" ]]; then
+        podman secret create --replace  netrc ${NETRC}
+        IMAGE_RUN_CLI_ARGS+=(--secret netrc,type=mount,target=/root/.netrc)
+      else
+        echo "⚠️ Warning: Missing value for secret: NETRC"
+      fi
 
       IMAGE_RUN_URI=${IMAGE_URI}:${IMAGE_INTERIM_TAG}
   script:

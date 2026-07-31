@@ -239,7 +239,7 @@ include:
   # --------------------------------------------------------------------------
   - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/semver@main
   - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/release@main
-  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/auto-merge-forward@main
+  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/foundation/merge-forward@main
 
 
   # --------------------------------------------------------------------------
@@ -282,7 +282,7 @@ include:
   - local: templates/structure-test.yml
     inputs:
       name: $[[ inputs.name ]]
-      target: $[[ inputs.unit_test_target ]]
+      target: $[[ inputs.target ]]
       context: $[[ inputs.context ]]
       structure_test_filename: $[[ inputs.structure_test_filename ]]
       stage: $[[ inputs.structure_test_stage ]]
