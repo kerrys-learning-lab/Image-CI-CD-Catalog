@@ -243,7 +243,7 @@ include:
 
 
   # --------------------------------------------------------------------------
-  - local: templates/build.yml
+  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/image/build@release/0.1
     inputs:
       name: $[[ inputs.name ]]
       dockerfile: $[[ inputs.dockerfile ]]
@@ -261,7 +261,7 @@ include:
 
 
   # --------------------------------------------------------------------------
-  - local: templates/unit-test.yml
+  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/image/unit-test@release/0.1
     inputs:
       name: $[[ inputs.name ]]
       dockerfile: $[[ inputs.dockerfile ]]
@@ -279,7 +279,7 @@ include:
 
 
   # --------------------------------------------------------------------------
-  - local: templates/structure-test.yml
+  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/image/structure-test@release/0.1
     inputs:
       name: $[[ inputs.name ]]
       target: $[[ inputs.target ]]
@@ -293,7 +293,7 @@ include:
 
 
   # --------------------------------------------------------------------------
-  - local: templates/promote.yml
+  - component: $CI_SERVER_FQDN/kerrys-learning-lab/devsecops/cicd-catalog/image/promote@release/0.1
     inputs:
       name: $[[ inputs.name ]]
       target: $[[ inputs.target ]]
